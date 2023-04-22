@@ -1,0 +1,49 @@
+cmake_minimum_required(VERSION 3.24)
+include(FetchContent)
+include(ExternalProject)
+
+set(VERSION "0.0.1")
+project(onlinepp VERSION ${VERSION})
+enable_language(CXX ASM)
+
+option(ONLINEPP_STATIC_CRT "ONLINEPP STATIC CRT Build ." OFF)
+
+if(ONLINEPP_STATIC_CRT)
+  if(MSVC)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+  endif()
+  set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} /MT")
+  set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} /MTd")
+  set(STARIC_CRT "STARIC_CRT")
+endif()
+
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+  set(CMAKE_INSTALL_PREFIX
+    "${CMAKE_BINARY_DIR}/rundir"
+    CACHE STRING "Directory to install after building" FORCE)
+endif()
+
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+if(ONLINEPP_STATIC_CRT)
+  set(UTILPP_STATIC_CRT ON CACHE BOOL "" FORCE)
+else()
+  set(UTILPP_STATIC_CRT OFF CACHE BOOL "" FORCE)
+endif()
+FetchContent_Declare(
+  utilpp
+  GIT_REPOSITORY https://github.com/wsw364321644/utilpp.git
+  GIT_TAG dc40004ca5d59a4d9891a4afa94497bb452db710
+
+  # GIT_SUBMODULES_RECURSE true
+  FIND_PACKAGE_ARGS NAMES sutils
+)
+FetchContent_MakeAvailable(utilpp)
+
+ImportProject(ZLIB ${STARIC_CRT})
+ImportProject(CURL ${STARIC_CRT})
+
+
+add_subdirectory(src/http)
